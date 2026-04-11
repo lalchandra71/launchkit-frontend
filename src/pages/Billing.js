@@ -155,19 +155,37 @@ const Billing = () => {
   const features = currentPlanData?.features || [];
 
   const getNextPlan = () => {
-    const planOrder = ['free', 'pro', 'enterprise'];
-    const currentIndex = planOrder.indexOf(currentPlan.toLowerCase());
-    if (currentIndex < planOrder.length - 1) {
-      return plans.find(p => p.id === planOrder[currentIndex + 1]);
+    if (currentPlan.toLowerCase() === 'free') {
+      return plans.find(p => p.id === 'enterprise');
+    }
+    if (currentPlan.toLowerCase() === 'enterprise') {
+      return plans.find(p => p.id === 'pro');
+    }
+    return null;
+  };
+
+  const getDowngradePlan = () => {
+    if (currentPlan.toLowerCase() === 'enterprise') {
+      return plans.find(p => p.id === 'free');
+    }
+    if (currentPlan.toLowerCase() === 'pro') {
+      return plans.find(p => p.id === 'enterprise');
     }
     return null;
   };
 
   const nextPlan = getNextPlan();
+  const downgradePlan = getDowngradePlan();
 
   const handleUpgrade = () => {
     if (nextPlan?.priceId) {
       handleCheckout(nextPlan.id);
+    }
+  };
+
+  const handleDowngrade = () => {
+    if (downgradePlan) {
+      handleCheckout(downgradePlan.id);
     }
   };
 
@@ -258,6 +276,24 @@ const Billing = () => {
                       ))}
                     </div>
                     <div className="flex flex-wrap gap-3">
+                      {nextPlan && (
+                        <button
+                          onClick={handleUpgrade}
+                          disabled={loading || !nextPlan.priceId}
+                          className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium transition-colors disabled:opacity-50"
+                        >
+                          {loading ? 'Processing...' : `Upgrade to ${nextPlan.name}`}
+                        </button>
+                      )}
+                      {downgradePlan && (
+                        <button
+                          onClick={handleDowngrade}
+                          disabled={loading}
+                          className="px-6 py-3 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 font-medium transition-colors"
+                        >
+                          Downgrade to {downgradePlan.name}
+                        </button>
+                      )}
                       <button
                         onClick={handleOpenPortal}
                         disabled={loading}
