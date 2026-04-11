@@ -35,16 +35,14 @@ const Dashboard = () => {
     }
   };
 
-  const currentOrg = orgData?.organization;
-  const userRole = orgData?.userRole || '';
   const subscription = orgData?.subscription;
   const currentPlan = subscription?.plan || 'Free';
   const isFreePlan = currentPlan.toLowerCase() === 'free';
-  
+  const canInvite = orgData?.canInvite || false;
+  const canManageBilling = orgData?.canManageBilling || false;
+
   const currentPlanData = plans.find(p => p.name.toLowerCase() === currentPlan.toLowerCase());
   const currentPlanPrice = currentPlanData ? `$${currentPlanData.price}` : '$0';
-  
-  const canInvite = userRole === 'owner' || userRole === 'admin';
 
   const metrics = [
     { label: 'Members', value: orgData?.memberCount || 0, icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z' },
@@ -83,27 +81,6 @@ const Dashboard = () => {
       <div className="max-w-5xl">
         <h2 className="text-2xl font-bold text-gray-900 mb-6">Dashboard</h2>
         
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="flex items-center gap-6">
-              <div>
-                <p className="text-sm text-gray-500">Organization</p>
-                <p className="text-lg font-semibold text-gray-900">{currentOrg?.name || 'N/A'}</p>
-              </div>
-              <div className="hidden sm:block w-px h-8 bg-gray-200"></div>
-              <div>
-                <p className="text-sm text-gray-500">Role</p>
-                <p className="text-lg font-semibold text-gray-900 capitalize">{userRole}</p>
-              </div>
-              <div className="hidden sm:block w-px h-8 bg-gray-200"></div>
-              <div>
-                <p className="text-sm text-gray-500">Plan</p>
-                <p className="text-lg font-semibold text-gray-900">{currentPlan}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           {metrics.map((metric, index) => (
             <div key={index} className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
@@ -144,7 +121,12 @@ const Dashboard = () => {
               </button>
               <button
                 onClick={() => navigate('/dashboard/settings')}
-                className="w-full flex items-center justify-center px-4 py-2 bg-indigo-100 text-indigo-700 rounded-lg hover:bg-indigo-200 font-medium transition-colors"
+                disabled={!canManageBilling}
+                className={`w-full flex items-center justify-center px-4 py-2 rounded-lg font-medium transition-colors ${
+                  canManageBilling
+                    ? 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200'
+                    : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                }`}
               >
                 <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
@@ -153,7 +135,12 @@ const Dashboard = () => {
               </button>
               <button
                 onClick={() => navigate('/dashboard/billing')}
-                className="w-full flex items-center justify-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium transition-colors"
+                disabled={!canManageBilling}
+                className={`w-full flex items-center justify-center px-4 py-2 rounded-lg font-medium transition-colors ${
+                  canManageBilling
+                    ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                }`}
               >
                 <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />

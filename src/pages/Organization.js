@@ -10,6 +10,8 @@ const Organization = () => {
   const [showModal, setShowModal] = useState(false);
   const [editingOrg, setEditingOrg] = useState(null);
   const [formData, setFormData] = useState({ name: '' });
+  const [canEdit, setCanEdit] = useState(false);
+  const [canDeleteAccount, setCanDeleteAccount] = useState(false);
 
   useEffect(() => {
     loadOrganizations();
@@ -19,6 +21,12 @@ const Organization = () => {
     try {
       const orgs = await orgAPI.list();
       setOrganizations(orgs);
+      if (orgs.length > 0) {
+        const current = await orgAPI.getCurrent();
+        const dashboardData = await orgAPI.getDashboard(current.id);
+        setCanEdit(dashboardData?.canEdit || false);
+        setCanDeleteAccount(dashboardData?.canDeleteAccount || false);
+      }
     } catch (err) {
       console.error('Failed to load organizations:', err);
     }
@@ -107,13 +115,15 @@ const Organization = () => {
                         <div className="flex space-x-3">
                           <button
                             onClick={() => handleEdit(org)}
-                            className="text-gray-600 hover:text-gray-800 font-medium"
+                            disabled={!canEdit}
+                            className="text-gray-600 hover:text-gray-800 font-medium disabled:text-gray-300 disabled:cursor-not-allowed"
                           >
                             Edit
                           </button>
                           <button
                             onClick={() => handleDelete(org)}
-                            className="text-red-600 hover:text-red-800 font-medium"
+                            disabled={!canDeleteAccount}
+                            className="text-red-600 hover:text-red-800 font-medium disabled:text-gray-300 disabled:cursor-not-allowed"
                           >
                             Delete
                           </button>

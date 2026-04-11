@@ -12,6 +12,10 @@ const Settings = () => {
   const [newKeyName, setNewKeyName] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [showRevokeModal, setShowRevokeModal] = useState(false);
+  const [revokingKeyId, setRevokingKeyId] = useState(null);
+  const [canManageApiKeys, setCanManageApiKeys] = useState(false);
+  const [canDeleteAccount, setCanDeleteAccount] = useState(false);
 
   useEffect(() => {
     loadSettings();
@@ -20,7 +24,10 @@ const Settings = () => {
   const loadSettings = async () => {
     try {
       const currentOrg = await orgAPI.getCurrent();
+      const dashboardData = await orgAPI.getDashboard(currentOrg.id);
       setCurrentOrgId(currentOrg.id);
+      setCanManageApiKeys(dashboardData?.canManageApiKeys || false);
+      setCanDeleteAccount(dashboardData?.canDeleteAccount || false);
       const settingsData = await orgAPI.getSettings(currentOrg.id);
       setApiKeys(settingsData.apiKeys || []);
     } catch (err) {
@@ -54,10 +61,10 @@ const Settings = () => {
     }
   };
 
-  const handleRevokeApiKey = async (keyId) => {
-    if (!window.confirm('Are you sure you want to revoke this API key? This action cannot be undone.')) {
-      return;
-    }
+  const handleRevokeApiKey = async () => {
+    const keyId = revokingKeyId;
+    setShowRevokeModal(false);
+    setRevokingKeyId(null);
     
     try {
       await orgAPI.revokeApiKey(currentOrgId, keyId);
@@ -68,6 +75,11 @@ const Settings = () => {
     }
   };
 
+  const confirmRevoke = (keyId) => {
+    setRevokingKeyId(keyId);
+    setShowRevokeModal(true);
+  };
+
   const handleDeleteAccount = () => {
     if (window.confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
       alert('Account deletion initiated...');
@@ -76,7 +88,7 @@ const Settings = () => {
 
   const copyToClipboard = (key) => {
     navigator.clipboard.writeText(key);
-    alert('Copied to clipboard!');
+    success('Copied to clipboard!');
   };
 
   return (
@@ -114,12 +126,14 @@ const Settings = () => {
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold text-gray-900">API Keys</h3>
-                <button 
-                  onClick={() => setShowCreateModal(true)}
-                  className="px-3 py-1.5 bg-indigo-600 text-white text-sm rounded-lg hover:bg-indigo-700"
-                >
-                  Create New Key
-                </button>
+                {canManageApiKeys && (
+                  <button 
+                    onClick={() => setShowCreateModal(true)}
+                    className="px-3 py-1.5 bg-indigo-600 text-white text-sm rounded-lg hover:bg-indigo-700"
+                  >
+                    Create New Key
+                  </button>
+                )}
               </div>
             </div>
             <div className="p-6">
@@ -145,8 +159,8 @@ const Settings = () => {
                           Copy
                         </button>
                         <button 
-                          onClick={() => handleRevokeApiKey(apiKey.id)}
-                          disabled={!apiKey.isActive}
+                          onClick={() => confirmRevoke(apiKey.id)}
+                          disabled={!apiKey.isActive || !canManageApiKeys}
                           className="px-3 py-1.5 text-sm text-red-600 hover:text-red-800 font-medium disabled:text-gray-400"
                         >
                           Revoke
@@ -171,7 +185,8 @@ const Settings = () => {
               </p>
               <button
                 onClick={handleDeleteAccount}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                disabled={!canDeleteAccount}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:bg-gray-300 disabled:cursor-not-allowed"
               >
                 Delete Account
               </button>
@@ -212,6 +227,36 @@ const Settings = () => {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        )}
+
+        {showRevokeModal && (
+          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Revoke API Key
+              </h3>
+              <p className="text-gray-600 mb-6">
+                Are you sure you want to revoke this API key? This action cannot be undone.
+              </p>
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => {
+                    setShowRevokeModal(false);
+                    setRevokingKeyId(null);
+                  }}
+                  className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleRevokeApiKey}
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                >
+                  Revoke
+                </button>
+              </div>
             </div>
           </div>
         )}

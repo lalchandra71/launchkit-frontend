@@ -13,9 +13,11 @@ const Team = () => {
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteRole, setInviteRole] = useState('member');
   const [loading, setLoading] = useState(false);
+  const [canInvite, setCanInvite] = useState(false);
+  const [canRemoveMember, setCanRemoveMember] = useState(false);
 
   const user = JSON.parse(localStorage.getItem('user') || '{}');
-  const canManageTeam = currentUserRole === 'owner' || currentUserRole === 'admin';
+  const canManageTeam = currentUserRole === 'admin';
 
   useEffect(() => {
     loadOrganizations();
@@ -28,6 +30,9 @@ const Team = () => {
       setOrganizations(orgs);
       if (orgs.length > 0) {
         setSelectedOrg(orgs[0].id);
+        const dashboardData = await orgAPI.getDashboard(orgs[0].id);
+        setCanInvite(dashboardData?.canInvite || false);
+        setCanRemoveMember(dashboardData?.canRemoveMember || false);
         loadMembers(orgs[0].id);
         loadInvitations(orgs[0].id);
       }
@@ -69,10 +74,13 @@ const Team = () => {
     }
   };
 
-  const handleOrgChange = (orgId) => {
+  const handleOrgChange = async (orgId) => {
     setSelectedOrg(orgId);
     loadMembers(orgId);
     loadInvitations(orgId);
+    const dashboardData = await orgAPI.getDashboard(orgId);
+    setCanInvite(dashboardData?.canInvite || false);
+    setCanRemoveMember(dashboardData?.canRemoveMember || false);
   };
 
   const handleInvite = async (e) => {
@@ -108,7 +116,7 @@ const Team = () => {
     }
     setLoading(true);
     try {
-      await orgAPI.removeMember(selectedOrg, member.id);
+      await orgAPI.removeMember(selectedOrg, member.userId);
       setMembers(members.filter(m => m.id !== member.id));
       success('Member removed successfully!');
     } catch (err) {
@@ -138,7 +146,7 @@ const Team = () => {
       <div className="max-w-5xl">
         <h2 className="text-2xl font-bold text-gray-900 mb-6">Team Management</h2>
 
-        {canManageTeam && (
+        {canInvite && (
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
           <div className="p-6 border-b border-gray-200">
             <h3 className="text-lg font-semibold text-gray-900">Invite User</h3>
@@ -195,7 +203,7 @@ const Team = () => {
         </div>
         )}
 
-        {canManageTeam && (
+        {canInvite && (
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
             <div className="p-6 border-b border-gray-200">
               <h3 className="text-lg font-semibold text-gray-900">Pending Invitations</h3>
@@ -256,7 +264,7 @@ const Team = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{member.email}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{member.organizationName}</td>
                       <td className="px-6 py-4 whitespace-nowrap">{getRoleBadge(member.role)}</td>
-                      {canManageTeam && (
+                      {canRemoveMember && (
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
                         <button
                           onClick={() => handleDelete(member)}

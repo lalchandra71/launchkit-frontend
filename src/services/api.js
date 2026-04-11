@@ -139,9 +139,12 @@ export const orgAPI = {
     if (response.status === 204 || response.status === 200) {
       return { success: true };
     }
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.message || 'Failed to remove member');
-    return data;
+    const text = await response.text();
+    if (!response.ok) {
+      const data = text ? JSON.parse(text) : { message: 'Failed to remove member' };
+      throw new Error(data.message || 'Failed to remove member');
+    }
+    return { success: true };
   },
 
   updateMember: async (orgId, memberId, data) => {
@@ -219,9 +222,15 @@ export const orgAPI = {
         ...getAuthHeaders(),
       },
     });
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.message || 'Failed to revoke API key');
-    return data;
+    if (response.status === 204 || response.status === 200) {
+      return { success: true };
+    }
+    const text = await response.text();
+    if (!response.ok) {
+      const data = text ? JSON.parse(text) : { message: 'Failed to revoke API key' };
+      throw new Error(data.message || 'Failed to revoke API key');
+    }
+    return { success: true };
   },
 };
 

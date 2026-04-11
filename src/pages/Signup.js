@@ -30,13 +30,15 @@ const Signup = () => {
     setLoading(true);
     try {
       if (inviteInfo) {
-        await authAPI.signupWithInvite({ 
+        const result = await authAPI.signupWithInvite({ 
           name: formData.name, 
           email: inviteInfo.email, 
           inviteToken: inviteInfo.token 
         });
-        success('Account created! Redirecting to login...');
-        navigate('/login');
+        localStorage.setItem('token', result.accessToken);
+        localStorage.setItem('user', JSON.stringify(result.user));
+        success('Account created! Redirecting...');
+        navigate('/dashboard');
       } else {
         await authAPI.signup(formData);
         success('Account created successfully! Please login.');

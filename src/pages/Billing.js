@@ -12,11 +12,29 @@ const Billing = () => {
   const [loadingData, setLoadingData] = useState(false);
   const [organizations, setOrganizations] = useState([]);
   const [selectedOrg, setSelectedOrg] = useState('');
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [processingPlan, setProcessingPlan] = useState(null);
+  const [canManageBilling, setCanManageBilling] = useState(false);
 
   useEffect(() => {
     loadOrganizations();
     loadPlans();
   }, []);
+
+  const loadOrganizations = async () => {
+    try {
+      const orgs = await orgAPI.list();
+      setOrganizations(orgs);
+      if (orgs.length > 0) {
+        const current = await orgAPI.getCurrent();
+        setSelectedOrg(current.id);
+        const dashboardData = await orgAPI.getDashboard(current.id);
+        setCanManageBilling(dashboardData?.canManageBilling || false);
+      }
+    } catch (err) {
+      console.error('Failed to load organizations:', err);
+    }
+  };
 
   const loadPlans = async () => {
     try {
@@ -30,20 +48,17 @@ const Billing = () => {
   useEffect(() => {
     if (selectedOrg) {
       loadBillingData();
+      loadPermissions();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedOrg]);
 
-  const loadOrganizations = async () => {
+  const loadPermissions = async () => {
     try {
-      const orgs = await orgAPI.list();
-      setOrganizations(orgs);
-      if (orgs.length > 0) {
-        const current = await orgAPI.getCurrent();
-        setSelectedOrg(current.id);
-      }
+      const dashboardData = await orgAPI.getDashboard(selectedOrg);
+      setCanManageBilling(dashboardData?.canManageBilling || false);
     } catch (err) {
-      console.error('Failed to load organizations:', err);
+      console.error('Failed to load permissions:', err);
     }
   };
 
@@ -65,12 +80,14 @@ const Billing = () => {
     }
   };
 
-  const handleOrgChange = (orgId) => {
+  const handleOrgChange = async (orgId) => {
     setSelectedOrg(orgId);
+    const dashboardData = await orgAPI.getDashboard(orgId);
+    setCanManageBilling(dashboardData?.canManageBilling || false);
   };
 
   const handleCheckout = async (planId) => {
-    setLoading(true);
+    setProcessingPlan(planId);
     try {
       const baseUrl = window.location.origin;
       const result = await billingAPI.checkout({ 
@@ -85,30 +102,27 @@ const Billing = () => {
         const checkClosed = setInterval(() => {
           if (checkoutWindow.closed) {
             clearInterval(checkClosed);
+            setProcessingPlan(null);
             loadBillingData();
           }
         }, 500);
       }
     } catch (err) {
       showError(err.message || 'Checkout failed');
-    } finally {
+      setProcessingPlan(null);
       setLoading(false);
     }
   };
 
-  const handleDowngrade = async () => {
+  const handleCancelPlan = async () => {
+    setShowCancelModal(false);
     setLoading(true);
     try {
-      const result = await billingAPI.downgrade(selectedOrg);
-      if (result.url) {
-        window.open(result.url, 'Stripe Portal', 'width=600,height=700,menubar=no,toolbar=no,location=no');
-        const checkClosed = setInterval(() => {
-          clearInterval(checkClosed);
-          loadBillingData();
-        }, 2000);
-      }
+      await billingAPI.cancelSubscription(selectedOrg);
+      showError('Subscription cancelled successfully');
+      loadBillingData();
     } catch (err) {
-      showError(err.message || 'Downgrade failed');
+      showError(err.message || 'Failed to cancel subscription');
     } finally {
       setLoading(false);
     }
@@ -136,8 +150,25 @@ const Billing = () => {
   const getPlanButton = (plan) => {
     const planName = plan.id?.toLowerCase() || plan.name?.toLowerCase();
     const isCurrent = planName === currentPlan;
+    const isPaidPlan = planName === 'pro' || planName === 'enterprise';
 
     if (isCurrent) {
+      if (isPaidPlan) {
+        return (
+          <div className="space-y-2">
+            <button disabled className="w-full py-2 px-4 bg-green-100 text-green-700 font-medium rounded-lg cursor-default">
+              Current Plan
+            </button>
+            <button
+              onClick={() => setShowCancelModal(true)}
+              disabled={loading || !canManageBilling}
+              className="w-full py-2 px-4 text-red-600 border border-red-200 font-medium rounded-lg hover:bg-red-50 transition-colors disabled:opacity-50"
+            >
+              {loading ? 'Processing...' : 'Cancel Plan'}
+            </button>
+          </div>
+        );
+      }
       return (
         <button disabled className="w-full py-2 px-4 bg-green-100 text-green-700 font-medium rounded-lg cursor-default">
           Current Plan
@@ -150,10 +181,10 @@ const Billing = () => {
         return (
           <button
             onClick={() => handleCheckout(plan.id)}
-            disabled={loading || !plan.priceId}
+            disabled={!plan.priceId || !canManageBilling}
             className="w-full py-2 px-4 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50"
           >
-            {loading ? 'Processing...' : 'Upgrade'}
+            {processingPlan === plan.id ? 'Processing...' : 'Buy'}
           </button>
         );
       }
@@ -164,21 +195,10 @@ const Billing = () => {
         return (
           <button
             onClick={() => handleCheckout(plan.id)}
-            disabled={loading || !plan.priceId}
+            disabled={!plan.priceId || !canManageBilling}
             className="w-full py-2 px-4 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50"
           >
-            {loading ? 'Processing...' : 'Upgrade'}
-          </button>
-        );
-      }
-      if (planName === 'free') {
-        return (
-          <button
-            onClick={handleDowngrade}
-            disabled={loading}
-            className="w-full py-2 px-4 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors"
-          >
-            {loading ? 'Processing...' : 'Downgrade'}
+            {processingPlan === plan.id ? 'Processing...' : 'Buy'}
           </button>
         );
       }
@@ -189,21 +209,10 @@ const Billing = () => {
         return (
           <button
             onClick={() => handleCheckout(plan.id)}
-            disabled={loading || !plan.priceId}
+            disabled={!plan.priceId || !canManageBilling}
             className="w-full py-2 px-4 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50"
           >
-            {loading ? 'Processing...' : 'Upgrade'}
-          </button>
-        );
-      }
-      if (planName === 'free') {
-        return (
-          <button
-            onClick={handleDowngrade}
-            disabled={loading}
-            className="w-full py-2 px-4 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors"
-          >
-            {loading ? 'Processing...' : 'Downgrade'}
+            {processingPlan === plan.id ? 'Processing...' : 'Buy'}
           </button>
         );
       }
@@ -351,6 +360,34 @@ const Billing = () => {
                 )}
               </div>
             </div>
+
+            {showCancelModal && (
+              <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+                <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                    Cancel Subscription
+                  </h3>
+                  <p className="text-gray-600 mb-6">
+                    Are you sure you want to cancel your subscription? You will lose access to premium features.
+                  </p>
+                  <div className="flex justify-end space-x-3">
+                    <button
+                      onClick={() => setShowCancelModal(false)}
+                      className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
+                    >
+                      No, Keep Plan
+                    </button>
+                    <button
+                      onClick={handleCancelPlan}
+                      disabled={loading}
+                      className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50"
+                    >
+                      {loading ? 'Cancelling...' : 'Yes, Cancel'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </>
         )}
       </div>
