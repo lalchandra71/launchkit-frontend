@@ -147,20 +147,6 @@ export const orgAPI = {
     return { success: true };
   },
 
-  updateMember: async (orgId, memberId, data) => {
-    const response = await fetch(`${API_BASE_URL}/org/${orgId}/members/${memberId}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        ...getAuthHeaders(),
-      },
-      body: JSON.stringify(data),
-    });
-    const result = await response.json();
-    if (!response.ok) throw new Error(result.message || 'Failed to update member');
-    return result;
-  },
-
   getInvites: async (orgId) => {
     const response = await fetch(`${API_BASE_URL}/org/invite/${orgId}`, {
       method: 'GET',
@@ -253,33 +239,6 @@ export const inviteAPI = {
     if (!response.ok) throw new Error(data.message || 'Invitation failed');
     return data;
   },
-
-  accept: async (inviteData) => {
-    const response = await fetch(`${API_BASE_URL}/org/invite/accept`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...getAuthHeaders(),
-      },
-      body: JSON.stringify(inviteData),
-    });
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.message || 'Failed to accept invitation');
-    return data;
-  },
-
-  getPending: async () => {
-    const response = await fetch(`${API_BASE_URL}/org/invite/pending`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        ...getAuthHeaders(),
-      },
-    });
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.message || 'Failed to fetch pending invitations');
-    return data;
-  },
 };
 
 export const billingAPI = {
@@ -311,47 +270,6 @@ export const billingAPI = {
     });
     const data = await response.json();
     if (!response.ok) throw new Error(data.message || 'Failed to fetch plans');
-    return data;
-  },
-
-  upgrade: async (planData) => {
-    const response = await fetch(`${API_BASE_URL}/billing/upgrade`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...getAuthHeaders(),
-      },
-      body: JSON.stringify({ ...planData, organizationId: planData.organizationId }),
-    });
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.message || 'Upgrade failed');
-    return data;
-  },
-
-  downgrade: async (organizationId) => {
-    const response = await fetch(`${API_BASE_URL}/billing/downgrade`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...getAuthHeaders(),
-      },
-      body: JSON.stringify({ organizationId }),
-    });
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.message || 'Downgrade failed');
-    return data;
-  },
-
-  getPortal: async (organizationId) => {
-    const response = await fetch(`${API_BASE_URL}/billing/portal?organizationId=${organizationId}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        ...getAuthHeaders(),
-      },
-    });
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.message || 'Failed to get portal');
     return data;
   },
 
@@ -392,21 +310,6 @@ export const billingAPI = {
     });
     const data = await response.json();
     if (!response.ok) throw new Error(data.message || 'Failed to cancel subscription');
-    return data;
-  },
-};
-
-export const webhookAPI = {
-  stripe: async (webhookData) => {
-    const response = await fetch(`${API_BASE_URL}/webhooks/stripe`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(webhookData),
-    });
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.message || 'Webhook processing failed');
     return data;
   },
 };

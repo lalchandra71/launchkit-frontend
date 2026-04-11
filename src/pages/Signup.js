@@ -7,7 +7,7 @@ const Signup = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { success, error: showError } = useToast();
-  const [formData, setFormData] = useState({ name: '' });
+  const [formData, setFormData] = useState({ name: '', email: '', password: '' });
   const [loading, setLoading] = useState(false);
   const [inviteInfo, setInviteInfo] = useState(null);
 
@@ -54,129 +54,92 @@ const Signup = () => {
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div>
+    <div className="min-h-screen flex items-center justify-center bg-surface-50 px-4">
+      <div className="w-full max-w-md">
+        <div className="text-center mb-8">
+          <h1 className="text-2xl font-semibold text-surface-900">LaunchKit</h1>
+        </div>
+        
+        <div className="card p-8">
           {inviteInfo ? (
             <>
-              <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-                Join your team
-              </h2>
-              <p className="mt-2 text-center text-sm text-green-600 font-medium">
-                You've been invited to join the organization
-              </p>
-              <p className="mt-2 text-center text-sm text-gray-500">
-                Email: {inviteInfo.email}
-              </p>
+              <h2 className="text-xl font-semibold text-surface-900 mb-2">Join your team</h2>
+              <div className="mb-6 p-4 bg-emerald-50 rounded-xl">
+                <p className="text-sm text-emerald-700 font-medium">You've been invited to join</p>
+                <p className="text-sm text-emerald-600 mt-1">{inviteInfo.email}</p>
+              </div>
             </>
           ) : (
             <>
-              <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-                Create your account
-              </h2>
-              <p className="mt-2 text-center text-sm text-gray-600">
-                Already have an account?{' '}
-                <Link to="/login" className="font-medium text-indigo-600 hover:text-indigo-500">
-                  Sign in
-                </Link>
-              </p>
+              <h2 className="text-xl font-semibold text-surface-900 mb-2">Create your account</h2>
+              <p className="text-sm text-surface-500 mb-6">Get started with LaunchKit</p>
             </>
           )}
-        </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="rounded-md shadow-sm -space-y-px">
+          
+          <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label htmlFor="name" className="sr-only">Full name</label>
+              <label className="label">Full name</label>
               <input
-                id="name"
-                name="name"
                 type="text"
-                required
+                name="name"
                 value={formData.name}
                 onChange={handleChange}
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="Full name"
+                placeholder="John Doe"
+                className="input"
+                required
               />
             </div>
+
             {!inviteInfo && (
               <>
                 <div>
-                  <label htmlFor="email-address" className="sr-only">Email address</label>
+                  <label className="label">Email</label>
                   <input
-                    id="email-address"
-                    name="email"
                     type="email"
-                    autoComplete="email"
-                    required
+                    name="email"
                     value={formData.email}
                     onChange={handleChange}
-                    className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                    placeholder="Email address"
+                    placeholder="you@example.com"
+                    className="input"
+                    required
                   />
                 </div>
+
                 <div>
-                  <label htmlFor="password" className="sr-only">Password</label>
+                  <label className="label">Password</label>
                   <input
-                    id="password"
-                    name="password"
                     type="password"
-                    autoComplete="new-password"
-                    required
+                    name="password"
                     value={formData.password}
                     onChange={handleChange}
-                    className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                    placeholder="Password"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="confirm-password" className="sr-only">Confirm password</label>
-                  <input
-                    id="confirm-password"
-                    name="confirmPassword"
-                    type="password"
-                    autoComplete="new-password"
+                    placeholder="••••••••"
+                    className="input"
                     required
-                    className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                    placeholder="Confirm password"
                   />
                 </div>
               </>
             )}
-          </div>
 
-          {!inviteInfo && (
-            <div className="flex items-center">
-              <input
-                id="terms"
-                name="terms"
-                type="checkbox"
-                required
-                className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-              />
-              <label htmlFor="terms" className="ml-2 block text-sm text-gray-900">
-                I agree to the{' '}
-                <a href="/terms" className="font-medium text-indigo-600 hover:text-indigo-500">
-                  Terms of Service
-                </a>{' '}
-                and{' '}
-                <a href="/privacy" className="font-medium text-indigo-600 hover:text-indigo-500">
-                  Privacy Policy
-                </a>
-              </label>
-            </div>
-          )}
-
-          <div>
             <button
               type="submit"
               disabled={loading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+              className="btn btn-primary w-full"
             >
               {loading ? 'Creating account...' : (inviteInfo ? 'Join Team' : 'Create account')}
             </button>
-          </div>
-        </form>
+          </form>
+
+          {!inviteInfo && (
+            <p className="text-center text-sm text-surface-500 mt-6">
+              Already have an account?{' '}
+              <Link to="/login" className="text-primary-600 hover:text-primary-700 font-medium">
+                Sign in
+              </Link>
+            </p>
+          )}
+        </div>
       </div>
     </div>
   );

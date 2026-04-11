@@ -14,19 +14,30 @@ const Organization = () => {
   const [canDeleteAccount, setCanDeleteAccount] = useState(false);
 
   useEffect(() => {
-    loadOrganizations();
+    loadInitialData();
   }, []);
+
+  const loadInitialData = async () => {
+    try {
+      const orgs = await orgAPI.list();
+      setOrganizations(orgs);
+      if (orgs.length > 0) {
+        const orgId = localStorage.getItem('currentOrgId') || orgs[0].id;
+        localStorage.setItem('currentOrgId', orgId);
+        
+        const dashboardData = await orgAPI.getDashboard(orgId);
+        setCanEdit(dashboardData?.canEdit || false);
+        setCanDeleteAccount(dashboardData?.canDeleteAccount || false);
+      }
+    } catch (err) {
+      console.error('Failed to load organizations:', err);
+    }
+  };
 
   const loadOrganizations = async () => {
     try {
       const orgs = await orgAPI.list();
       setOrganizations(orgs);
-      if (orgs.length > 0) {
-        const current = await orgAPI.getCurrent();
-        const dashboardData = await orgAPI.getDashboard(current.id);
-        setCanEdit(dashboardData?.canEdit || false);
-        setCanDeleteAccount(dashboardData?.canDeleteAccount || false);
-      }
     } catch (err) {
       console.error('Failed to load organizations:', err);
     }
@@ -83,86 +94,93 @@ const Organization = () => {
   return (
     <DashboardLayout>
       <div className="max-w-5xl">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-900">Organizations</h2>
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h2 className="text-2xl font-semibold text-surface-900">Organizations</h2>
+            <p className="text-sm text-surface-500 mt-1">Manage your organizations</p>
+          </div>
           <button
             onClick={() => {
               setEditingOrg(null);
               setFormData({ name: '' });
               setShowModal(true);
             }}
-            className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            className="btn btn-primary"
           >
+            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
             Create Organization
           </button>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {organizations.length > 0 ? (
-                  organizations.map((org) => (
-                    <tr key={org.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{org.name}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        <div className="flex space-x-3">
-                          <button
-                            onClick={() => handleEdit(org)}
-                            disabled={!canEdit}
-                            className="text-gray-600 hover:text-gray-800 font-medium disabled:text-gray-300 disabled:cursor-not-allowed"
-                          >
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => handleDelete(org)}
-                            disabled={!canDeleteAccount}
-                            className="text-red-600 hover:text-red-800 font-medium disabled:text-gray-300 disabled:cursor-not-allowed"
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={2} className="px-6 py-4 text-center text-sm text-gray-500">
-                      No organizations found
+        <div className="card overflow-hidden">
+          <table className="w-full">
+            <thead className="bg-surface-50 border-b border-surface-200">
+              <tr>
+                <th className="px-6 py-4 text-left text-xs font-medium text-surface-500 uppercase tracking-wider">Name</th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-surface-500 uppercase tracking-wider">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-surface-100">
+              {organizations.length > 0 ? (
+                organizations.map((org) => (
+                  <tr key={org.id} className="hover:bg-surface-50 transition-colors">
+                    <td className="px-6 py-4 text-sm font-medium text-surface-900">{org.name}</td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-4">
+                        <button
+                          onClick={() => handleEdit(org)}
+                          disabled={!canEdit}
+                          className="text-sm text-surface-600 hover:text-surface-900 font-medium disabled:text-surface-300 disabled:cursor-not-allowed"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDelete(org)}
+                          disabled={!canDeleteAccount}
+                          className="text-sm text-red-600 hover:text-red-700 font-medium disabled:text-surface-300 disabled:cursor-not-allowed"
+                        >
+                          Delete
+                        </button>
+                      </div>
                     </td>
                   </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={2} className="px-6 py-12 text-center text-sm text-surface-500">
+                    No organizations found
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
 
       {showModal && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+        <div className="fixed inset-0 bg-surface-900/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl shadow-elevated p-6 w-full max-w-md">
+            <h3 className="text-lg font-semibold text-surface-900 mb-2">
               {editingOrg ? 'Edit Organization' : 'Create Organization'}
             </h3>
+            <p className="text-sm text-surface-500 mb-6">
+              {editingOrg ? 'Update organization details' : 'Add a new organization'}
+            </p>
             <form onSubmit={handleSubmit}>
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Organization Name</label>
+              <div className="mb-5">
+                <label className="label">Organization Name</label>
                 <input
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({ name: e.target.value })}
-                  placeholder="Enter organization name"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  placeholder="Acme Inc."
+                  className="input"
                   required
                 />
               </div>
-              <div className="flex justify-end space-x-3">
+              <div className="flex justify-end gap-3">
                 <button
                   type="button"
                   onClick={() => {
@@ -170,14 +188,14 @@ const Organization = () => {
                     setEditingOrg(null);
                     setFormData({ name: '' });
                   }}
-                  className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 focus:outline-none"
+                  className="btn btn-secondary"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={loading}
-                  className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+                  className="btn btn-primary"
                 >
                   {loading ? 'Saving...' : (editingOrg ? 'Update' : 'Create')}
                 </button>

@@ -7,7 +7,7 @@ const Settings = () => {
   const { success, error: showError } = useToast();
   const [activeTab, setActiveTab] = useState('api-keys');
   const [apiKeys, setApiKeys] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [apiKeysLoading, setApiKeysLoading] = useState(true);
   const [currentOrgId, setCurrentOrgId] = useState(null);
   const [newKeyName, setNewKeyName] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -18,22 +18,30 @@ const Settings = () => {
   const [canDeleteAccount, setCanDeleteAccount] = useState(false);
 
   useEffect(() => {
-    loadSettings();
+    loadInitialData();
   }, []);
 
-  const loadSettings = async () => {
+  const loadInitialData = async () => {
     try {
-      const currentOrg = await orgAPI.getCurrent();
-      const dashboardData = await orgAPI.getDashboard(currentOrg.id);
-      setCurrentOrgId(currentOrg.id);
-      setCanManageApiKeys(dashboardData?.canManageApiKeys || false);
-      setCanDeleteAccount(dashboardData?.canDeleteAccount || false);
-      const settingsData = await orgAPI.getSettings(currentOrg.id);
-      setApiKeys(settingsData.apiKeys || []);
+      const orgs = await orgAPI.list();
+      if (orgs.length > 0) {
+        const orgId = localStorage.getItem('currentOrgId') || orgs[0].id;
+        setCurrentOrgId(orgId);
+        localStorage.setItem('currentOrgId', orgId);
+        
+        const [dashboardData, settingsData] = await Promise.all([
+          orgAPI.getDashboard(orgId),
+          orgAPI.getSettings(orgId)
+        ]);
+        
+        setCanManageApiKeys(dashboardData?.canManageApiKeys || false);
+        setCanDeleteAccount(dashboardData?.canDeleteAccount || false);
+        setApiKeys(settingsData.apiKeys || []);
+      }
     } catch (err) {
       console.error('Failed to load settings:', err);
     } finally {
-      setLoading(false);
+      setApiKeysLoading(false);
     }
   };
 
@@ -94,26 +102,29 @@ const Settings = () => {
   return (
     <DashboardLayout>
       <div className="max-w-5xl">
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">Settings</h2>
+        <div className="mb-8">
+          <h2 className="text-2xl font-semibold text-surface-900">Settings</h2>
+          <p className="text-sm text-surface-500 mt-1">Manage your account settings</p>
+        </div>
 
-        <div className="mb-6 border-b border-gray-200">
+        <div className="mb-6 border-b border-surface-200">
           <nav className="-mb-px flex space-x-8">
             <button
               onClick={() => setActiveTab('api-keys')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm ${
+              className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                 activeTab === 'api-keys'
-                  ? 'border-indigo-600 text-indigo-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  ? 'border-primary-600 text-primary-600'
+                  : 'border-transparent text-surface-500 hover:text-surface-700 hover:border-surface-300'
               }`}
             >
               API Keys
             </button>
             <button
               onClick={() => setActiveTab('danger')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm ${
+              className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                 activeTab === 'danger'
                   ? 'border-red-600 text-red-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  : 'border-transparent text-surface-500 hover:text-surface-700 hover:border-surface-300'
               }`}
             >
               Danger Zone
@@ -122,46 +133,47 @@ const Settings = () => {
         </div>
 
         {activeTab === 'api-keys' && (
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
-            <div className="p-6 border-b border-gray-200">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-gray-900">API Keys</h3>
-                {canManageApiKeys && (
-                  <button 
-                    onClick={() => setShowCreateModal(true)}
-                    className="px-3 py-1.5 bg-indigo-600 text-white text-sm rounded-lg hover:bg-indigo-700"
-                  >
-                    Create New Key
-                  </button>
-                )}
-              </div>
+          <div className="card overflow-hidden mb-6">
+            <div className="px-6 py-4 border-b border-surface-200 flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-surface-900">API Keys</h3>
+              {canManageApiKeys && (
+                <button 
+                  onClick={() => setShowCreateModal(true)}
+                  className="btn btn-primary"
+                >
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  Create Key
+                </button>
+              )}
             </div>
             <div className="p-6">
-              {loading ? (
-                <div className="text-center text-gray-500">Loading...</div>
+              {apiKeysLoading ? (
+                <div className="text-center text-surface-500 py-8">Loading...</div>
               ) : apiKeys.length === 0 ? (
-                <div className="text-center text-gray-500">No API keys found</div>
+                <div className="text-center text-surface-500 py-8">No API keys found</div>
               ) : (
-                <div className="space-y-4">
+                <div className="space-y-3">
                   {apiKeys.map((apiKey) => (
-                    <div key={apiKey.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-gray-50 rounded-lg">
+                    <div key={apiKey.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-surface-50 rounded-xl">
                       <div>
-                        <p className="font-medium text-gray-900">{apiKey.name}</p>
-                        <p className="text-sm font-mono text-gray-500 mt-1">{apiKey.key}</p>
-                        <p className="text-xs text-gray-400 mt-1">Created: {apiKey.created} {!apiKey.isActive && <span className="text-red-500">(Revoked)</span>}</p>
+                        <p className="font-medium text-surface-900">{apiKey.name}</p>
+                        <p className="text-sm font-mono text-surface-500 mt-1">{apiKey.key}</p>
+                        <p className="text-xs text-surface-400 mt-1">Created: {apiKey.created} {!apiKey.isActive && <span className="text-red-600">(Revoked)</span>}</p>
                       </div>
-                      <div className="flex gap-2">
+                      <div className="flex items-center gap-3">
                         <button
                           onClick={() => copyToClipboard(apiKey.key)}
                           disabled={!apiKey.isActive}
-                          className="px-3 py-1.5 text-sm text-indigo-600 hover:text-indigo-800 font-medium disabled:text-gray-400"
+                          className="px-3 py-1.5 text-sm text-primary-600 hover:text-primary-700 font-medium disabled:text-surface-300"
                         >
                           Copy
                         </button>
                         <button 
                           onClick={() => confirmRevoke(apiKey.id)}
                           disabled={!apiKey.isActive || !canManageApiKeys}
-                          className="px-3 py-1.5 text-sm text-red-600 hover:text-red-800 font-medium disabled:text-gray-400"
+                          className="px-3 py-1.5 text-sm text-red-600 hover:text-red-700 font-medium disabled:text-surface-300 disabled:cursor-not-allowed"
                         >
                           Revoke
                         </button>
@@ -175,18 +187,18 @@ const Settings = () => {
         )}
 
         {activeTab === 'danger' && (
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-            <div className="p-6 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900">Danger Zone</h3>
+          <div className="card overflow-hidden">
+            <div className="px-6 py-4 border-b border-surface-200">
+              <h3 className="text-lg font-semibold text-surface-900">Danger Zone</h3>
             </div>
             <div className="p-6">
-              <p className="text-sm text-gray-600 mb-4">
+              <p className="text-sm text-surface-600 mb-5">
                 Once you delete your account, there is no going back. Please be certain.
               </p>
               <button
                 onClick={handleDeleteAccount}
                 disabled={!canDeleteAccount}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                className="btn btn-danger disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Delete Account
               </button>
@@ -195,18 +207,19 @@ const Settings = () => {
         )}
 
         {showCreateModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 w-full max-w-md">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Create API Key</h3>
+          <div className="fixed inset-0 bg-surface-900/50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-2xl shadow-elevated p-6 w-full max-w-md">
+              <h3 className="text-lg font-semibold text-surface-900 mb-2">Create API Key</h3>
+              <p className="text-sm text-surface-500 mb-6">Generate a new API key for your organization</p>
               <form onSubmit={handleCreateApiKey}>
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Key Name</label>
+                <div className="mb-5">
+                  <label className="label">Key Name</label>
                   <input
                     type="text"
                     value={newKeyName}
                     onChange={(e) => setNewKeyName(e.target.value)}
-                    placeholder="e.g., Production API Key"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    placeholder="Production API Key"
+                    className="input"
                     required
                   />
                 </div>
@@ -214,14 +227,14 @@ const Settings = () => {
                   <button
                     type="button"
                     onClick={() => setShowCreateModal(false)}
-                    className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+                    className="btn btn-secondary"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={creating || !newKeyName.trim()}
-                    className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50"
+                    className="btn btn-primary"
                   >
                     {creating ? 'Creating...' : 'Create'}
                   </button>
@@ -232,12 +245,12 @@ const Settings = () => {
         )}
 
         {showRevokeModal && (
-          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+          <div className="fixed inset-0 bg-surface-900/50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-2xl shadow-elevated p-6 w-full max-w-md">
+              <h3 className="text-lg font-semibold text-surface-900 mb-2">
                 Revoke API Key
               </h3>
-              <p className="text-gray-600 mb-6">
+              <p className="text-sm text-surface-500 mb-6">
                 Are you sure you want to revoke this API key? This action cannot be undone.
               </p>
               <div className="flex justify-end gap-3">
@@ -246,13 +259,13 @@ const Settings = () => {
                     setShowRevokeModal(false);
                     setRevokingKeyId(null);
                   }}
-                  className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
+                  className="btn btn-secondary"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleRevokeApiKey}
-                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                  className="btn btn-danger"
                 >
                   Revoke
                 </button>
