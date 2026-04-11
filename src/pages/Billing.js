@@ -31,6 +31,7 @@ const Billing = () => {
     if (selectedOrg) {
       loadBillingData();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedOrg]);
 
   const loadOrganizations = async () => {
