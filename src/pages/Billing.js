@@ -224,8 +224,8 @@ const Billing = () => {
                 {isFreePlan ? (
                   <div>
                     <div className="flex items-center mb-4">
-                      <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mr-4">
-                        <span className="text-2xl font-bold text-gray-600">{currentPlan}</span>
+                      <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center mr-4">
+                        <span className="text-xl font-bold text-gray-600">{currentPlan}</span>
                       </div>
                       <div>
                         <p className="text-2xl font-bold text-gray-900">{currentPlan} Plan</p>
@@ -248,15 +248,15 @@ const Billing = () => {
                         disabled={loading || !nextPlan.priceId}
                         className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium transition-colors disabled:opacity-50"
                       >
-                        {loading ? 'Processing...' : `Upgrade to ${nextPlan.name} - $${nextPlan.price}/month`}
+                        {loading ? 'Processing...' : 'Upgrade'}
                       </button>
                     )}
                   </div>
                 ) : (
                   <div>
                     <div className="flex items-center mb-4">
-                      <div className="w-16 h-16 rounded-full bg-indigo-100 flex items-center justify-center mr-4">
-                        <span className="text-2xl font-bold text-indigo-600">{currentPlan}</span>
+                      <div className="w-20 h-20 rounded-full bg-indigo-100 flex items-center justify-center mr-4">
+                        <span className="text-xl font-bold text-indigo-600">{currentPlan}</span>
                       </div>
                       <div>
                         <p className="text-2xl font-bold text-gray-900">{currentPlan} Plan</p>
@@ -282,7 +282,7 @@ const Billing = () => {
                           disabled={loading || !nextPlan.priceId}
                           className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium transition-colors disabled:opacity-50"
                         >
-                          {loading ? 'Processing...' : `Upgrade to ${nextPlan.name}`}
+                          {loading ? 'Processing...' : 'Upgrade'}
                         </button>
                       )}
                       {downgradePlan && (
@@ -291,7 +291,7 @@ const Billing = () => {
                           disabled={loading}
                           className="px-6 py-3 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 font-medium transition-colors"
                         >
-                          Downgrade to {downgradePlan.name}
+                          Downgrade
                         </button>
                       )}
                       <button
