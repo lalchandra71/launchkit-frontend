@@ -155,7 +155,7 @@ const Billing = () => {
   const features = currentPlanData?.features || [];
 
   const getNextPlan = () => {
-    const planOrder = ['free', 'starter', 'pro', 'enterprise'];
+    const planOrder = ['free', 'pro', 'enterprise'];
     const currentIndex = planOrder.indexOf(currentPlan.toLowerCase());
     if (currentIndex < planOrder.length - 1) {
       return plans.find(p => p.id === planOrder[currentIndex + 1]);
