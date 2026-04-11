@@ -294,20 +294,6 @@ const Billing = () => {
                           Downgrade
                         </button>
                       )}
-                      <button
-                        onClick={handleOpenPortal}
-                        disabled={loading}
-                        className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium transition-colors disabled:opacity-50"
-                      >
-                        Manage Subscription
-                      </button>
-                      <button
-                        onClick={handleCancel}
-                        disabled={loading}
-                        className="px-6 py-3 text-red-600 border border-red-600 rounded-lg hover:bg-red-50 font-medium transition-colors disabled:opacity-50"
-                      >
-                        Cancel Plan
-                      </button>
                     </div>
                   </div>
                 )}

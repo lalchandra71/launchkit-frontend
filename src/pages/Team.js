@@ -210,6 +210,9 @@ const Team = () => {
                       <div>
                         <p className="font-medium text-gray-900">{invite.email}</p>
                         <p className="text-sm text-gray-500">Role: {invite.role}</p>
+                        {invite.tempPassword && (
+                          <p className="text-sm text-gray-600 font-mono">Password: {invite.tempPassword}</p>
+                        )}
                         <p className="text-xs text-gray-400">Expires: {invite.expiresAt ? new Date(invite.expiresAt).toLocaleDateString() : 'N/A'}</p>
                       </div>
                       <div className="flex gap-2">
