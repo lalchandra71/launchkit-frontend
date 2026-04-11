@@ -19,12 +19,7 @@ const Team = () => {
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const canManageTeam = currentUserRole === 'admin';
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => {
-    loadInitialData();
-  }, []);
-
-  const loadInitialData = async () => {
+  const loadInitialData = React.useCallback(async () => {
     try {
       const orgs = await orgAPI.list();
       setOrganizations(orgs);
@@ -61,7 +56,11 @@ const Team = () => {
     } catch (err) {
       console.error('Failed to load data:', err);
     }
-  };
+  }, [user.id, user.name, user.email]);
+
+  useEffect(() => {
+    loadInitialData();
+  }, [loadInitialData]);
 
   const loadMembers = async (orgId) => {
     try {
