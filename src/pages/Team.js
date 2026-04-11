@@ -19,7 +19,7 @@ const Team = () => {
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const canManageTeam = currentUserRole === 'admin';
 
-  // eslint-disable-next-line
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     loadInitialData();
   }, []);
