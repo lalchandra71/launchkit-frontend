@@ -96,36 +96,6 @@ const Billing = () => {
     }
   };
 
-  const handleCancel = async () => {
-    if (!window.confirm('Are you sure you want to cancel your subscription?')) {
-      return;
-    }
-    setLoading(true);
-    try {
-      await billingAPI.cancelSubscription(selectedOrg);
-      success('Subscription cancelled successfully!');
-      loadBillingData();
-    } catch (err) {
-      showError(err.message || 'Failed to cancel subscription');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleOpenPortal = async () => {
-    setLoading(true);
-    try {
-      const result = await billingAPI.getPortal(selectedOrg);
-      if (result.url) {
-        window.open(result.url, 'Stripe Portal', 'width=600,height=700,menubar=no,toolbar=no,location=no');
-      }
-    } catch (err) {
-      showError(err.message || 'Failed to open portal');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const getStatusBadge = (status) => {
     const styles = {
       Paid: 'bg-green-100 text-green-800',
