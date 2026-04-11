@@ -4,7 +4,7 @@ import { billingAPI, orgAPI } from '../services/api';
 import { useToast } from '../components/Toast';
 
 const Billing = () => {
-  const { success, error: showError } = useToast();
+  const { error: showError } = useToast();
   const [subscription, setSubscription] = useState(null);
   const [billingHistory, setBillingHistory] = useState([]);
   const [plans, setPlans] = useState([]);
