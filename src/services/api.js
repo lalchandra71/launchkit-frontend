@@ -312,4 +312,43 @@ export const billingAPI = {
     if (!response.ok) throw new Error(data.message || 'Failed to cancel subscription');
     return data;
   },
+
+  checkOrgLimit: async () => {
+    const response = await fetch(`${API_BASE_URL}/billing/check-org-limit`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders(),
+      },
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.message || 'Failed to check org limit');
+    return data;
+  },
+
+  checkMemberLimit: async (organizationId) => {
+    const response = await fetch(`${API_BASE_URL}/billing/check-member-limit?organizationId=${organizationId}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders(),
+      },
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.message || 'Failed to check member limit');
+    return data;
+  },
+
+  checkApiKeyLimit: async (organizationId) => {
+    const response = await fetch(`${API_BASE_URL}/billing/check-api-key-limit?organizationId=${organizationId}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders(),
+      },
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.message || 'Failed to check API key limit');
+    return data;
+  },
 };

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import DashboardLayout from '../components/DashboardLayout';
-import { orgAPI } from '../services/api';
+import { orgAPI, billingAPI } from '../services/api';
 import { useToast } from '../components/Toast';
 
 const Settings = () => {
@@ -51,6 +51,11 @@ const Settings = () => {
     
     setCreating(true);
     try {
+      const limitCheck = await billingAPI.checkApiKeyLimit(currentOrgId);
+      if (!limitCheck.allowed) {
+        showError(limitCheck.message || 'Please upgrade your plan to create more API keys.');
+        return;
+      }
       const result = await orgAPI.createApiKey(currentOrgId, newKeyName);
       setApiKeys([{
         id: result.id,

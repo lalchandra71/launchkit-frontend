@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import DashboardLayout from '../components/DashboardLayout';
-import { orgAPI, inviteAPI } from '../services/api';
+import { orgAPI, inviteAPI, billingAPI } from '../services/api';
 import { useToast } from '../components/Toast';
 
 const Team = () => {
@@ -108,6 +108,11 @@ const Team = () => {
     e.preventDefault();
     setLoading(true);
     try {
+      const limitCheck = await billingAPI.checkMemberLimit(selectedOrg);
+      if (!limitCheck.allowed) {
+        showError(limitCheck.message || 'Please upgrade your plan to add more members.');
+        return;
+      }
       await inviteAPI.invite({ 
         email: inviteEmail, 
         role: inviteRole,

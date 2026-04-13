@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import DashboardLayout from '../components/DashboardLayout';
-import { orgAPI } from '../services/api';
+import { orgAPI, billingAPI } from '../services/api';
 import { useToast } from '../components/Toast';
 
 const Organization = () => {
@@ -55,13 +55,18 @@ const Organization = () => {
         await orgAPI.update(editingOrg.id, { name: formData.name });
         success('Organization updated successfully!');
       } else {
+        const limitCheck = await billingAPI.checkOrgLimit();
+        if (!limitCheck.allowed) {
+          showError(limitCheck.message || 'Please upgrade your plan to create more organizations.');
+          return;
+        }
         await orgAPI.create({ name: formData.name });
         success('Organization created successfully!');
       }
       setShowModal(false);
       setEditingOrg(null);
       setFormData({ name: '' });
-      loadOrganizations();
+      loadInitialData();
     } catch (err) {
       showError(err.message || 'Failed to save organization');
     } finally {
