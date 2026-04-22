@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import Home from './pages/Home';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import ForgotPassword from './pages/ForgotPassword';
@@ -28,7 +29,7 @@ function App() {
           <Route path="/dashboard/billing" element={<ProtectedRoute><RequireOrganization><Billing /></RequireOrganization></ProtectedRoute>} />
           <Route path="/billing/success" element={<ProtectedRoute><BillingSuccess /></ProtectedRoute>} />
           <Route path="/dashboard/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-          <Route path="/" element={<Login />} />
+          <Route path="/" element={<Home />} />
         </Routes>
       </Router>
     </ToastProvider>

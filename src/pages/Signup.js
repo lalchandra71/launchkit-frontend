@@ -59,7 +59,7 @@ const Signup = () => {
     <div className="min-h-screen flex items-center justify-center bg-surface-50 px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-semibold text-surface-900">LaunchKit</h1>
+          <Link to="/" className="text-2xl font-semibold text-surface-900 hover:text-primary-600 transition-colors">LaunchKit</Link>
         </div>
         
         <div className="card p-8">
