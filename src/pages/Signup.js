@@ -206,9 +206,9 @@ const Signup = () => {
         {/* Terms */}
         <p className="mt-6 text-center text-xs text-surface-400">
           By creating an account, you agree to our{' '}
-          <a href="#" className="text-primary-500 hover:underline">Terms of Service</a>
+          <span className="text-primary-500 hover:underline cursor-pointer">Terms of Service</span>
           {' '}and{' '}
-          <a href="#" className="text-primary-500 hover:underline">Privacy Policy</a>
+          <span className="text-primary-500 hover:underline cursor-pointer">Privacy Policy</span>
         </p>
       </div>
     </div>

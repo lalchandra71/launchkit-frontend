@@ -9,7 +9,6 @@ const Team = () => {
   const [selectedOrg, setSelectedOrg] = useState('');
   const [members, setMembers] = useState([]);
   const [pendingInvites, setPendingInvites] = useState([]);
-  const [currentUserRole, setCurrentUserRole] = useState('');
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteRole, setInviteRole] = useState('member');
   const [loading, setLoading] = useState(false);
@@ -17,7 +16,6 @@ const Team = () => {
   const [canRemoveMember, setCanRemoveMember] = useState(false);
 
   const user = JSON.parse(localStorage.getItem('user') || '{}');
-  const canManageTeam = currentUserRole === 'admin';
 
   const loadInitialData = React.useCallback(async () => {
     try {
@@ -38,9 +36,6 @@ const Team = () => {
         setCanRemoveMember(dashboardData?.canRemoveMember || false);
         
         const membersList = Array.isArray(membersData) ? membersData : (membersData.members || []);
-        const currentMember = membersList.find(m => m.userId === user.id);
-        setCurrentUserRole(currentMember?.role?.toLowerCase() || '');
-        
         const membersWithDetails = membersList.map(m => ({
           id: m.id,
           userId: m.userId,
@@ -67,8 +62,6 @@ const Team = () => {
       const data = await orgAPI.getMembers(orgId);
       const membersList = Array.isArray(data) ? data : (data.members || []);
       
-      const currentMember = membersList.find(m => m.userId === user.id);
-      setCurrentUserRole(currentMember?.role?.toLowerCase() || '');
       const membersWithDetails = membersList.map(m => ({
         id: m.id,
         userId: m.userId,
@@ -322,7 +315,7 @@ const Team = () => {
                     <th className="px-6 py-3 text-left text-sm font-semibold text-surface-600 uppercase tracking-wider">Email</th>
                     <th className="px-6 py-3 text-left text-sm font-semibold text-surface-600 uppercase tracking-wider">Role</th>
                     <th className="px-6 py-3 text-left text-sm font-semibold text-surface-600 uppercase tracking-wider">Joined</th>
-                    {canManageTeam && (
+                    {canRemoveMember && (
                       <th className="px-6 py-3 text-left text-sm font-semibold text-surface-600 uppercase tracking-wider">Actions</th>
                     )}
                   </tr>
@@ -343,7 +336,7 @@ const Team = () => {
                       <td className="px-6 py-4 text-sm text-surface-500">
                         {member.joinedAt ? new Date(member.joinedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '-'}
                       </td>
-                      {canManageTeam && (
+                      {canRemoveMember && (
                         <td className="px-6 py-4">
                           <button
                             onClick={() => handleDelete(member)}

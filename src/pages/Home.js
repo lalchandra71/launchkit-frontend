@@ -234,9 +234,9 @@ const Home = () => {
               <Link to="/signup" className="text-sm text-surface-400 hover:text-white transition-colors">
                 Sign up
               </Link>
-              <a href="#" className="text-sm text-surface-400 hover:text-white transition-colors">
+              <span className="text-sm text-surface-400 cursor-pointer transition-colors hover:text-white">
                 Documentation
-              </a>
+              </span>
             </div>
           </div>
           <div className="mt-8 pt-8 border-t border-surface-800 text-center">
